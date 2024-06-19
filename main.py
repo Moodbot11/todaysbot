@@ -4,7 +4,7 @@ import time
 import os
 import zipfile
 import yaml
- 
+
 from inference_assistant import inference
 from utils import create_assistant_from_config_file, upload_to_openai, export_assistant
 
@@ -20,7 +20,6 @@ st.set_page_config(
 )
 
 st.title("Build🚧, Share🤗 and Sell💸 OpenAI Assistants🤖")
-
 
 utilizzo = st.selectbox("🤖 Hi, what do you want to do?", ("Create or Import an Assistant", "Use an Assistant"))
 
@@ -97,14 +96,12 @@ if openaiKey:
                             )
                             st.write("👌 Assistant created successfully with File and Retrieval")
                         else:
-                            
                             my_assistant = client.beta.assistants.create(
                                 instructions=prompt_sistema,
                                 name=nome_assistente,
                                 model=modello_assistente,
                             )
                             status.update(label="👌 Assistant created successfully", state="complete", expanded=False)
-
 
                         time.sleep(1)
 
@@ -115,9 +112,8 @@ if openaiKey:
                         cola.info("📥 To use the assistant, copy the ID and paste it in the 'Use an Assistant' section")
                         colb.info("📤 To share the assistant, download Assistant Configuration File and send it")
 
-
                     col3, col4 = st.columns(2)
-                    #crea un bottone per scaricare un file.txt con l'ID dell'assistente
+                    # Create a button to download a .txt file with the assistant's ID
                     col3.download_button(
                         label="🗂 Download ID Assistant",
                         data="ASSISTANT ID : " + my_assistant.id + "\nOpenAI API Key: " + openaiKey,
@@ -135,9 +131,7 @@ if openaiKey:
                             mime="application/zip",
                         )
 
-                    
                     st.balloons()
-
 
         else:
             file_up = st.file_uploader("📥 Upload .iaItaliaBotConfig", type=['.iaItaliaBotConfig'], accept_multiple_files=False)
@@ -145,7 +139,6 @@ if openaiKey:
                 if st.button("🤖 Build imported Assistant"):
                     client = openai.OpenAI()
                     
-
                     with st.status("⏲ Assistant creation in progress...", expanded=True) as status:
                         time.sleep(0.5)
                         status.update(label="Estrazione e caricamento file in corso...", state="running")
@@ -166,12 +159,9 @@ if openaiKey:
                         file_name="id_ASSISTANT.txt",
                         mime="text/plain",
                     )
-        
-
 
     else:
-        # Inferenza con Assistente
-
+        # Inference with Assistant
         id_assistente = st.text_input("🆔 Insert the ID of the assistant")
 
         if id_assistente:
