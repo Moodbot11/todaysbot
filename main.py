@@ -85,80 +85,86 @@ if openaiKey:
                         time.sleep(2)
                         status.update(label="🧐 Configuring the assistant...", state="running")
                         time.sleep(2)
-                        if "id_file" in st.session_state and len(st.session_state.id_file) > 0:
-                            status.update(label="📡 Create Assistant with File and Retrieval...", state="running")
-                            my_assistant = client.beta.assistants.create(
-                                instructions=prompt_sistema,
-                                name=nome_assistente,
-                                tools=[{"type": "retrieval"}],
-                                model=modello_assistente,
-                                file_ids=st.session_state.id_file,
+                        try:
+                            if "id_file" in st.session_state and len(st.session_state.id_file) > 0:
+                                status.update(label="📡 Create Assistant with File and Retrieval...", state="running")
+                                my_assistant = client.beta.assistants.create(
+                                    instructions=prompt_sistema,
+                                    name=nome_assistente,
+                                    tools=[{"type": "retrieval"}],
+                                    model=modello_assistente,
+                                    file_ids=st.session_state.id_file,
+                                )
+                                st.write("👌 Assistant created successfully with File and Retrieval")
+                            else:
+                                my_assistant = client.beta.assistants.create(
+                                    instructions=prompt_sistema,
+                                    name=nome_assistente,
+                                    model=modello_assistente,
+                                )
+                                status.update(label="👌 Assistant created successfully", state="complete", expanded=False)
+
+                            time.sleep(1)
+
+                            st.success("✅ Assistant created successfully")
+                            st.info("🆗 ID of the assistant: " + my_assistant.id)
+                            st.error("⛔ Remember to save the ID of the assistant to use it later")
+                            cola, colb = st.columns(2)
+                            cola.info("📥 To use the assistant, copy the ID and paste it in the 'Use an Assistant' section")
+                            colb.info("📤 To share the assistant, download Assistant Configuration File and send it")
+
+                            col3, col4 = st.columns(2)
+                            # Create a button to download a .txt file with the assistant's ID
+                            col3.download_button(
+                                label="🗂 Download ID Assistant",
+                                data="ASSISTANT ID : " + my_assistant.id + "\nOpenAI API Key: " + openaiKey,
+                                file_name="id_ASSISTANT_" + nome_assistente.replace(" ", "_") + ".txt",
+                                mime="text/plain",
                             )
-                            st.write("👌 Assistant created successfully with File and Retrieval")
-                        else:
-                            my_assistant = client.beta.assistants.create(
-                                instructions=prompt_sistema,
-                                name=nome_assistente,
-                                model=modello_assistente,
-                            )
-                            status.update(label="👌 Assistant created successfully", state="complete", expanded=False)
 
-                        time.sleep(1)
+                            with st.spinner("📥 Building Assistant Configuration File..."):
+                                data_to_export = export_assistant(nome_assistente, modello_assistente, prompt_sistema, file_up)
+                                
+                                col4.download_button(
+                                    label="🗂 Download Assistant Configuration File",
+                                    data=data_to_export,
+                                    file_name=nome_assistente + ".iaItaliaBotConfig",
+                                    mime="application/zip",
+                                )
 
-                        st.success("✅ Assistant created successfully")
-                        st.info("🆗 ID of the assistant: " + my_assistant.id)
-                        st.error("⛔ Remember to save the ID of the assistant to use it later")
-                        cola, colb = st.columns(2)
-                        cola.info("📥 To use the assistant, copy the ID and paste it in the 'Use an Assistant' section")
-                        colb.info("📤 To share the assistant, download Assistant Configuration File and send it")
-
-                    col3, col4 = st.columns(2)
-                    # Create a button to download a .txt file with the assistant's ID
-                    col3.download_button(
-                        label="🗂 Download ID Assistant",
-                        data="ASSISTANT ID : " + my_assistant.id + "\nOpenAI API Key: " + openaiKey,
-                        file_name="id_ASSISTANT_" + nome_assistente.replace(" ", "_") + ".txt",
-                        mime="text/plain",
-                    )
-
-                    with st.spinner("📥 Building Assistant Configuration File..."):
-                        data_to_export = export_assistant(nome_assistente, modello_assistente, prompt_sistema, file_up)
-                        
-                        col4.download_button(
-                            label="🗂 Download Assistant Configuration File",
-                            data=data_to_export,
-                            file_name=nome_assistente + ".iaItaliaBotConfig",
-                            mime="application/zip",
-                        )
-
-                    st.balloons()
+                            st.balloons()
+                        except Exception as e:
+                            st.error(f"An error occurred: {e}")
 
         else:
             file_up = st.file_uploader("📥 Upload .iaItaliaBotConfig", type=['.iaItaliaBotConfig'], accept_multiple_files=False)
             if file_up:
                 if st.button("🤖 Build imported Assistant"):
                     client = openai.OpenAI()
-                    
+
                     with st.status("⏲ Assistant creation in progress...", expanded=True) as status:
-                        time.sleep(0.5)
-                        status.update(label="Estrazione e caricamento file in corso...", state="running")
-                        time.sleep(0.5)
-                        my_assistant = create_assistant_from_config_file(file_up, client)
-                        status.update(label="Assistente importato creato con successo", state="complete")
+                        try:
+                            time.sleep(0.5)
+                            status.update(label="Estrazione e caricamento file in corso...", state="running")
+                            time.sleep(0.5)
+                            my_assistant = create_assistant_from_config_file(file_up, client)
+                            status.update(label="Assistente importato creato con successo", state="complete")
 
-                        st.success("✅ Assistant created successfully")
-                        st.info("🆗 ID of the assistant: " + my_assistant.id)
-                        st.error("⛔ Remember to save the ID of the assistant to use it later")
-                        cola, colb = st.columns(2)
-                        cola.info("📥 To use the assistant, copy the ID and paste it in the 'Use an Assistant' section")
-                        colb.info("📤 To share the assistant, download Assistant Configuration File and send it")
+                            st.success("✅ Assistant created successfully")
+                            st.info("🆗 ID of the assistant: " + my_assistant.id)
+                            st.error("⛔ Remember to save the ID of the assistant to use it later")
+                            cola, colb = st.columns(2)
+                            cola.info("📥 To use the assistant, copy the ID and paste it in the 'Use an Assistant' section")
+                            colb.info("📤 To share the assistant, download Assistant Configuration File and send it")
 
-                    st.download_button(
-                        label="🗂 Download ID Assistant",
-                        data="ASSISTANT ID : " + my_assistant.id + "\nOpenAI API Key: " + openaiKey,
-                        file_name="id_ASSISTANT.txt",
-                        mime="text/plain",
-                    )
+                            st.download_button(
+                                label="🗂 Download ID Assistant",
+                                data="ASSISTANT ID : " + my_assistant.id + "\nOpenAI API Key: " + openaiKey,
+                                file_name="id_ASSISTANT.txt",
+                                mime="text/plain",
+                            )
+                        except Exception as e:
+                            st.error(f"An error occurred: {e}")
 
     else:
         # Inference with Assistant
